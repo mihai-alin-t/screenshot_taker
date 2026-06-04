@@ -1,6 +1,7 @@
 import "dotenv/config";
 import qrcode from "qrcode-terminal";
-import { Client, LocalAuth, MessageMedia } from "whatsapp-web.js";
+import pkg from "whatsapp-web.js";
+const { Client, LocalAuth, MessageMedia } = pkg as any;
 import { runAgent } from "./agent.js";
 import { closeBrowser } from "./browser.js";
 
@@ -8,21 +9,7 @@ const ALLOWED_SENDER = process.env.ALLOWED_SENDER ?? "";
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: "./.wwebjs_auth" }),
-  // Pin a known-good WhatsApp Web version to avoid breakage on WA updates
-  webVersionCache: {
-    type: "remote",
-    remotePath:
-      "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.x.json",
-  },
-  puppeteer: {
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-    ],
-  },
+  puppeteer: { headless: true },
 });
 
 client.on("qr", (qr) => {
@@ -39,6 +26,18 @@ client.on("auth_failure", (msg) => {
   console.error("Delete .wwebjs_auth/ and restart to re-scan QR.");
 });
 
+client.on("loading_screen", (percent, message) => {
+  console.log(`Loading WhatsApp Web: ${percent}% — ${message}`);
+});
+
+client.on("change_state", (state) => {
+  console.log("WhatsApp state:", state);
+  // Fallback: some versions never fire "ready" when restoring from LocalAuth
+  if (state === "CONNECTED") {
+    console.log("WhatsApp bot ready (via state change). Send a URL to get started.");
+  }
+});
+
 client.on("ready", () => {
   console.log("WhatsApp bot ready. Send a URL to get started.");
 });
@@ -47,9 +46,13 @@ client.on("disconnected", (reason) => {
   console.log("WhatsApp disconnected:", reason);
 });
 
-client.on("message", async (message) => {
-  // Ignore messages sent by the bot itself
-  if (message.fromMe) return;
+client.on("message_create", async (message) => {
+  // Skip bot's own quoted replies to avoid infinite loops.
+  // Plain fromMe messages (user self-messaging) are allowed through.
+  if (message.fromMe && message.hasQuotedMsg) return;
+
+  // Ignore status broadcasts and system messages
+  if (message.from.endsWith("@broadcast") || message.from === "status@broadcast") return;
 
   // Optionally restrict to a specific sender
   if (ALLOWED_SENDER && message.from !== ALLOWED_SENDER) return;
@@ -60,8 +63,7 @@ client.on("message", async (message) => {
 
   console.log(`[${new Date().toISOString()}] Message from ${message.from}: ${message.body.slice(0, 80)}`);
 
-  // Show typing indicator while processing
-  await chat.sendStateTyping();
+  await message.reply("Researching... please wait.");
 
   const start = Date.now();
 
@@ -70,6 +72,9 @@ client.on("message", async (message) => {
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 
     console.log(`[${new Date().toISOString()}] Reply ready in ${elapsed}s`);
+
+    clearInterval(typingInterval);
+    await chat.clearState();
 
     if (imageBase64 && imageMimeType) {
       const media = new MessageMedia(imageMimeType, imageBase64, "screenshot.png");
