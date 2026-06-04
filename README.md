@@ -14,7 +14,7 @@ User (WhatsApp)
       ▼
 whatsapp-bot.ts          mcp-server.ts  ◄── Claude Desktop (optional)
       │                       │
-      │ runAgent()             │ MCP protocol (stdio)
+      │ runAgent()            │ MCP protocol (stdio)
       ▼                       │
   agent.ts ◄──────────────────┘ (shares same tool functions)
       │
