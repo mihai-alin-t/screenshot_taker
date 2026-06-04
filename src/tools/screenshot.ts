@@ -20,14 +20,9 @@ export async function captureScreenshot(
   const page = await context.newPage();
 
   try {
-    await page.goto(url, {
-      waitUntil: "networkidle",
-      timeout: 30_000,
-    }).catch(async () => {
-      // Fallback: networkidle can time out on polling pages; retry with "load"
-      await page.goto(url, { waitUntil: "load", timeout: 30_000 });
-      await page.waitForTimeout(1500);
-    });
+    await page.goto(url, { waitUntil: "load", timeout: 20_000 });
+    // Give JS-heavy SPAs a moment to render after load
+    await page.waitForLoadState("networkidle", { timeout: 1_500 }).catch(() => {});
 
     const pngBuffer = await page.screenshot({
       fullPage,

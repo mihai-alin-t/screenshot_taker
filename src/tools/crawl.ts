@@ -19,13 +19,9 @@ export async function crawlUrl(url: string): Promise<string> {
   const page = await context.newPage();
 
   try {
-    await page.goto(url, {
-      waitUntil: "networkidle",
-      timeout: 30_000,
-    }).catch(async () => {
-      await page.goto(url, { waitUntil: "load", timeout: 30_000 });
-      await page.waitForTimeout(1500);
-    });
+    await page.goto(url, { waitUntil: "load", timeout: 20_000 });
+    // Give JS-heavy SPAs a moment to render after load
+    await page.waitForLoadState("networkidle", { timeout: 1_500 }).catch(() => {});
 
     const html = await page.content();
     const pageUrl = page.url(); // resolved URL after redirects

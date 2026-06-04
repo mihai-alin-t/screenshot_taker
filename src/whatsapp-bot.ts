@@ -1,9 +1,10 @@
 import "dotenv/config";
+import fs from "fs/promises";
 import qrcode from "qrcode-terminal";
 import pkg from "whatsapp-web.js";
 const { Client, LocalAuth, MessageMedia } = pkg as any;
 import { runAgent } from "./agent.js";
-import { closeBrowser } from "./browser.js";
+import { getBrowser, closeBrowser } from "./browser.js";
 
 const ALLOWED_SENDER = process.env.ALLOWED_SENDER ?? "";
 
@@ -17,29 +18,33 @@ client.on("qr", (qr) => {
   qrcode.generate(qr, { small: true });
 });
 
+let readyTimer: NodeJS.Timeout | undefined;
+let isReady = false;
+
 client.on("authenticated", () => {
   console.log("WhatsApp authenticated ✓");
+  // authenticated can fire multiple times (including after ready) — ignore once ready
+  if (isReady) return;
+  if (readyTimer) clearTimeout(readyTimer);
+  // If ready doesn't fire within 30s the session is likely corrupted
+  readyTimer = setTimeout(() => {
+    console.log("Session corrupted — please delete .wwebjs_auth and .wwebjs_cache folders, then run npm run bot again.");
+    process.exit(1);
+  }, 30_000);
 });
 
 client.on("auth_failure", (msg) => {
   console.error("WhatsApp auth failed:", msg);
-  console.error("Delete .wwebjs_auth/ and restart to re-scan QR.");
-});
-
-client.on("loading_screen", (percent, message) => {
-  console.log(`Loading WhatsApp Web: ${percent}% — ${message}`);
-});
-
-client.on("change_state", (state) => {
-  console.log("WhatsApp state:", state);
-  // Fallback: some versions never fire "ready" when restoring from LocalAuth
-  if (state === "CONNECTED") {
-    console.log("WhatsApp bot ready (via state change). Send a URL to get started.");
-  }
+  console.log("Please delete .wwebjs_auth and .wwebjs_cache folders, then run npm run bot again.");
+  process.exit(1);
 });
 
 client.on("ready", () => {
+  isReady = true;
+  clearTimeout(readyTimer);
   console.log("WhatsApp bot ready. Send a URL to get started.");
+  // Pre-warm Playwright so the first request doesn't pay the browser launch cost
+  getBrowser().catch(() => {});
 });
 
 client.on("disconnected", (reason) => {
@@ -72,9 +77,6 @@ client.on("message_create", async (message) => {
     const elapsed = ((Date.now() - start) / 1000).toFixed(1);
 
     console.log(`[${new Date().toISOString()}] Reply ready in ${elapsed}s`);
-
-    clearInterval(typingInterval);
-    await chat.clearState();
 
     if (imageBase64 && imageMimeType) {
       const media = new MessageMedia(imageMimeType, imageBase64, "screenshot.png");
