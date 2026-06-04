@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(not exist *)",
+      "Bash(mkdir -p \"d:/projects/screenshot_taker/docs/brainstorms\")",
+      "Bash(git init *)",
+      "Bash(git branch *)",
+      "Bash(npm install *)",
+      "Bash(npx playwright *)",
+      "Bash(node_modules/.bin/playwright install *)",
+      "Bash(node -e \"import\\('@mozilla/readability'\\).then\\(m => console.log\\('exports:', Object.keys\\(m\\)\\)\\).catch\\(e => console.log\\('err:', e.message\\)\\)\")",
+      "Bash(npx tsx *)",
+      "Bash(node -e \"import\\('@modelcontextprotocol/sdk/server/mcp.js'\\).then\\(m => console.log\\('exports:', Object.keys\\(m\\)\\)\\).catch\\(e => console.log\\('err:', e.message\\)\\)\")",
+      "Bash(npx tsc *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git config *)",
+      "Bash(node -e \"import\\('whatsapp-web.js'\\).then\\(m => { const pkg = require\\('./node_modules/whatsapp-web.js/package.json'\\); console.log\\('version:', pkg.version\\) }\\)\")",
+      "Bash(node --input-type=module)"
+    ],
+    "additionalDirectories": [
+      "d:\\projects\\screenshot_taker\\docs"
+    ]
+  }
+}
