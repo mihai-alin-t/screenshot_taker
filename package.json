@@ -1,0 +1,32 @@
+{
+  "name": "url-research-agent",
+  "version": "1.0.0",
+  "description": "WhatsApp-connected AI agent that researches URLs using Claude, Playwright, and MCP",
+  "type": "module",
+  "scripts": {
+    "mcp": "tsx src/mcp-server.ts",
+    "bot": "tsx src/whatsapp-bot.ts",
+    "test:screenshot": "tsx src/tools/screenshot.ts",
+    "test:crawl": "tsx src/tools/crawl.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.36.3",
+    "@modelcontextprotocol/sdk": "^1.10.2",
+    "@mozilla/readability": "^0.5.0",
+    "dotenv": "^16.4.7",
+    "jsdom": "^26.0.0",
+    "playwright": "^1.50.1",
+    "playwright-extra": "^4.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.26.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.10.7",
+    "@types/qrcode-terminal": "^0.12.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
