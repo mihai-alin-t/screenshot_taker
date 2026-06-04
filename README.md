@@ -186,6 +186,16 @@ Bot:  [image of GitHub trending page]
 
 ---
 
+## TODO — What to Improve Next
+
+- [ ] **Conversation memory (RAG-lite)** — Store past crawl results and let Claude reference them across messages. Even a simple `Map<url, summary>` in memory would introduce retrieval patterns.
+- [ ] **Max-iterations guard on the agent loop** — Claude could theoretically call tools indefinitely. Cap iterations at ~5 and return a graceful message if exceeded.
+- [ ] **Prompt caching** — The system prompt is re-sent on every request. Add `cache_control: { type: "ephemeral" }` to cut input token costs by ~90% at scale.
+- [ ] **Streaming responses** — Use `client.messages.stream()` instead of `create()` and forward chunks back to WhatsApp progressively. Standard in production and teaches a different async pattern.
+- [ ] **Evals** — Write 10 test cases with expected tool choices (e.g. "given this URL, Claude should call `crawl_url` not `screenshot_url`"). The most underrated skill in GenAI engineering.
+
+---
+
 ## Stack
 
 | Layer | Package |
